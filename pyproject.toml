@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "sinkingfund_ui"
+version = "0.1.0"
+description = "A light weight UI for the sinkingfund library."
+authors = ["Greg Barbieri <gfbarbieri@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+streamlit = "^1.48.1"
+plotly = "^5.0.0"
+sinkingfund = {git = "https://github.com/gfbarbieri/sinkingfund.git", rev = "main"}
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+pytest-mock = "^3.12.0"
+pytest-cov = "^4.1.0"
+openpyxl = "^3.1.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,68 @@
+/* Custom CSS styles for sinkingfund-ui */
+
+/* Main container styling */
+.main > div {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+/* Metric card styling */
+.stMetric {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
+}
+
+.stMetric > label {
+    font-weight: 600;
+    color: #1f77b4;
+    font-size: 0.9rem;
+}
+
+/* Button styling */
+.stButton > button {
+    border-radius: 0.5rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Form input styling */
+.stSelectbox > div > div > div,
+.stNumberInput > div > div > input {
+    border-radius: 0.5rem;
+    border: 1px solid #ddd;
+}
+
+/* Alert styling */
+.stAlert > div {
+    border-radius: 0.5rem;
+    border-left: 4px solid #1f77b4;
+}
+
+/* Sidebar styling */
+.css-1d391kg {
+    background-color: #f8f9fa;
+}
+
+/* Chart container */
+.stPlotlyChart {
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Header styling */
+h1, h2, h3 {
+    color: #2c3e50;
+}
+
+/* Progress bar styling */
+.stProgress > div > div > div {
+    background-color: #1f77b4;
+}

@@ -1,0 +1,46 @@
+[
+  {
+    "bill_id": "bill_1",
+    "service": "Electric Bill",
+    "amount_due": 150.00,
+    "recurring": false,
+    "due_date": "2025-02-15"
+  },
+  {
+    "bill_id": "bill_2",
+    "service": "Internet Service",
+    "amount_due": 79.99,
+    "recurring": true,
+    "start_date": "2025-01-15",
+    "frequency": "monthly",
+    "interval": 1
+  },
+  {
+    "bill_id": "bill_3",
+    "service": "Gym Membership",
+    "amount_due": 29.99,
+    "recurring": true,
+    "start_date": "2025-01-20",
+    "frequency": "monthly",
+    "interval": 1
+  },
+  {
+    "bill_id": "bill_4",
+    "service": "Insurance Premium",
+    "amount_due": 500.00,
+    "recurring": true,
+    "start_date": "2025-03-01",
+    "frequency": "quarterly",
+    "interval": 1
+  },
+  {
+    "bill_id": "bill_5",
+    "service": "Annual Fee",
+    "amount_due": 1200.00,
+    "recurring": true,
+    "start_date": "2025-06-01",
+    "frequency": "annual",
+    "interval": 1
+  }
+]
+

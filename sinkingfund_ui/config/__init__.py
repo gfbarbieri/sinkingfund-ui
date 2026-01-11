@@ -1,0 +1,1 @@
+"""Configuration module for the sinkingfund_ui application."""

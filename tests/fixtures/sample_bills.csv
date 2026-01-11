@@ -1,0 +1,7 @@
+bill_id,service,amount_due,recurring,due_date,start_date,frequency,interval,end_date,occurrences
+bill_1,Electric Bill,150.00,False,2025-02-15,,,,,
+bill_2,Internet Service,79.99,True,,2025-01-15,monthly,1,
+bill_3,Gym Membership,29.99,True,,2025-01-20,monthly,1,
+bill_4,Insurance Premium,500.00,True,,2025-03-01,quarterly,1,
+bill_5,Annual Fee,1200.00,True,,2025-06-01,annual,1,
+

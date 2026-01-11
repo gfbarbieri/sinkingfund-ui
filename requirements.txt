@@ -1,0 +1,2 @@
+streamlit>=1.48.1
+git+https://github.com/gfbarbieri/sinkingfund.git@main

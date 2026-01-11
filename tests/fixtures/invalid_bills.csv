@@ -1,0 +1,5 @@
+bill_id,service,amount_due
+bill_1,Electric Bill
+bill_2,Internet Service,invalid_amount
+bill_3,,150.00
+
