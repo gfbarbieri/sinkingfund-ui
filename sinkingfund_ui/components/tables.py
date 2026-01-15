@@ -51,13 +51,47 @@ import streamlit as st
 from sinkingfund_ui.components.forms.bill_management import edit_bill_form
 
 ########################################################################
+## FUND INFO TABLE
+########################################################################
+
+def fund_info_table(fund):
+    """
+    Render a compact, tabular summary of fund information.
+
+    Parameters
+    ----------
+    fund : SinkingFund
+        The fund instance to display information for.
+    """
+
+    data = [{
+        "Start Date": fund.start_date,
+        "Planning End Date": fund.end_date,
+        "Balance": f"${fund.balance:.2f}"
+    }]
+
+    df = pd.DataFrame(data)
+    st.table(df)
+
+########################################################################
 ## UNIFIED BILLS TABLE FUNCTION
 ########################################################################
 
 def unified_bills_table(fund):
     """
-    Render a unified bills table with native sorting, filtering, and 
+    Render a unified bills table with native sorting, filtering, and
     edit/delete functionality via row selection.
+
+    Parameters
+    ----------
+    fund : SinkingFund
+        The fund instance containing bills to display.
+
+    Notes
+    -----
+    This function renders an interactive Streamlit dataframe with
+    single-row selection. When a row is selected, edit and delete
+    buttons appear. Selection state is persisted in st.session_state.
     """
 
     # Get the bills from the fund's bill manager.
