@@ -17,8 +17,18 @@ Examples
    pytest tests/unit/test_forms.py::TestBillDataCreation
 """
 
+########################################################################
+## IMPORTS
+########################################################################
+
 from datetime import date, timedelta
+
 import pytest
+
+from sinkingfund import SinkingFund
+from sinkingfund_ui.components.forms.fund_setup import (
+    _serialize_bills, rebuild_fund_with_bills
+)
 
 
 class TestBillDataCreation:
@@ -261,4 +271,97 @@ class TestDateHandling:
         }
         
         assert bill_data["start_date"] == today
+
+
+class TestFundRebuild:
+    """Test fund rebuild helpers used in the UI."""
+
+    def test_serialize_bills_for_rebuild(self):
+        """Ensure bills serialize with expected fields."""
+        fund = SinkingFund(
+            start_date=date.today(),
+            end_date=date.today() + timedelta(days=90),
+            balance=100.0
+        )
+
+        bills_data = [
+            {
+                "bill_id": "one_time_1",
+                "service": "One Time Service",
+                "amount_due": 25.0,
+                "recurring": False,
+                "due_date": date.today() + timedelta(days=30)
+            },
+            {
+                "bill_id": "recurring_1",
+                "service": "Monthly Service",
+                "amount_due": 15.0,
+                "recurring": True,
+                "start_date": date.today(),
+                "frequency": "monthly",
+                "interval": 1
+            }
+        ]
+
+        fund.add_bills(source=bills_data, contribution_interval=14)
+
+        serialized = _serialize_bills(fund)
+        serialized_map = {item["bill_id"]: item for item in serialized}
+
+        assert serialized_map["one_time_1"]["recurring"] is False
+        assert serialized_map["one_time_1"]["due_date"] is not None
+        assert serialized_map["one_time_1"]["start_date"] is None
+
+        assert serialized_map["recurring_1"]["recurring"] is True
+        assert serialized_map["recurring_1"]["due_date"] is None
+        assert serialized_map["recurring_1"]["start_date"] is not None
+
+    def test_rebuild_fund_resets_allocations(self):
+        """Rebuilding a fund should clear allocations and schedules."""
+        fund = SinkingFund(
+            start_date=date.today(),
+            end_date=date.today() + timedelta(days=365),
+            balance=500.0
+        )
+
+        bills_data = [
+            {
+                "bill_id": "bill_1",
+                "service": "Service A",
+                "amount_due": 100.0,
+                "recurring": False,
+                "due_date": date.today() + timedelta(days=60)
+            },
+            {
+                "bill_id": "bill_2",
+                "service": "Service B",
+                "amount_due": 200.0,
+                "recurring": False,
+                "due_date": date.today() + timedelta(days=120)
+            }
+        ]
+
+        fund.add_bills(source=bills_data, contribution_interval=14)
+        fund.update_contribution_dates(14)
+        fund.allocate(strategy="sorted")
+        fund.schedule(strategy="independent_scheduler")
+
+        rebuilt = rebuild_fund_with_bills(
+            existing_fund=fund,
+            start_date=date.today(),
+            end_date=date.today() + timedelta(days=180),
+            balance=250.0,
+            contribution_interval=14
+        )
+
+        rebuilt_bills = rebuilt.get_bills()
+        rebuilt_bill_ids = {bill.bill_id for bill in rebuilt_bills}
+        assert rebuilt_bill_ids == {"bill_1", "bill_2"}
+
+        envelopes = rebuilt.get_envelopes()
+        if envelopes:
+            total_allocation = sum(
+                float(env.initial_allocation) for env in envelopes
+            )
+            assert total_allocation == 0
 
