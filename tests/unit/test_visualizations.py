@@ -174,7 +174,7 @@ class TestScheduleVisualization:
         # Verify info message displayed.
         mock_st.info.assert_called_once()
         call_args = mock_st.info.call_args[0][0]
-        assert "Generate a schedule" in call_args
+        assert "generate a schedule" in call_args
 
     @patch('sinkingfund_ui.main.st')
     def test_render_schedule_visualization_empty_report(self, mock_st):
@@ -188,7 +188,7 @@ class TestScheduleVisualization:
         # Verify info message displayed.
         mock_st.info.assert_called_once()
         call_args = mock_st.info.call_args[0][0]
-        assert "Generate a schedule" in call_args
+        assert "generate a schedule" in call_args
 
     @patch('sinkingfund_ui.main.st')
     @patch('sinkingfund_ui.main.create_timeseries_chart_from_dfs')

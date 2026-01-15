@@ -44,7 +44,7 @@ from sinkingfund_ui.components.forms import (
 )
 
 from sinkingfund_ui.components.tables import (
-    unified_bills_table, create_bill_summary_table
+    unified_bills_table, create_bill_summary_table, fund_info_table
 )
 
 from sinkingfund_ui.utils.report_utils import convert_report_section_to_dataframe
@@ -101,15 +101,15 @@ def initialize_session_state():
         st.session_state.proportional_method = None
 
 ########################################################################
-## RENDER FUND SETUP SECTION
+## RENDER FUND MANAGEMENT SECTION
 ########################################################################
 
-def render_fund_setup_section():
+def render_fund_management_sidebar():
     """
-    Render the fund setup form.
+    Render the fund management form in the sidebar.
     """
 
-    # Render the fund setup form.
+    st.header("Fund Management")
     fund_setup_form()
 
 ########################################################################
@@ -119,18 +119,16 @@ def render_fund_setup_section():
 def render_bill_management_sidebar():
     """Render the sidebar with bill management options."""
 
-    st.header("📋 Manage Bills")
+    st.header("Manage Bills")
     
     if st.session_state.fund is None:
-        st.info("Create a fund first to manage bills")
+        st.info("Set up a fund in Fund Management to manage bills.")
         return
     
     # File upload section
     st.subheader("Upload Bills from File")
     upload_bills_from_file()
-    
-    st.divider()
-    
+        
     # Manual bill entry section
     st.subheader("Add Bill Manually")
     manual_bill_form(fund=st.session_state.fund)
@@ -148,7 +146,7 @@ def render_schedule_contributions_sidebar():
     st.header("Schedule Contributions")
     
     if st.session_state.fund is None:
-        st.info("Create a fund first to schedule contributions")
+        st.info("Set up a fund in Fund Management to schedule contributions.")
         return
     
     # Render allocation strategy selection.
@@ -268,7 +266,10 @@ def render_schedule_visualization():
 
     # Check if report exists in session state.
     if st.session_state.report is None or not st.session_state.report:
-        st.info("Generate a schedule to view the visualization.")
+        st.info(
+            "Use the sidebar to generate a schedule before viewing the "
+            "visualization."
+        )
         return
     
     try:
@@ -308,6 +309,10 @@ def render_bills_section():
     # Render the main header.
     st.header("Bills")
 
+    if st.session_state.fund is None:
+        st.info("Set up a fund in the sidebar to manage bills.")
+        return
+
     # Render the unified bills table.
     try:
         unified_bills_table(fund=st.session_state.fund)
@@ -346,29 +351,22 @@ def main():
     
     # Render the title and description.
     st.title("Sinking Fund Manager")
-    
-    # Fund setup (if not created). If the fund is not created, then
-    # render the fund setup section. This is always the first step
-    # in the application. Return exits the function and stops the
-    # application from rendering the rest of the page until a fund
-    # is created.
-    if st.session_state.fund is None:
-        st.header("Fund Setup")
-        render_fund_setup_section()
-        return
-    
-    # Show fund info information.
-    st.success(
-        f"Fund active: {st.session_state.fund.start_date} to "
-        f"{st.session_state.fund.end_date} | "
-        f"Balance: ${st.session_state.fund.balance:.2f}"
-    )
-    
+
     # Render the sidebar.
     with st.sidebar:
+        render_fund_management_sidebar()
+        st.divider()
         render_bill_management_sidebar()
         st.divider()
         render_schedule_contributions_sidebar()
+
+    # Main panel fund information (or placeholder).
+    st.header("Fund Information")
+    if st.session_state.fund is None:
+        st.info("No fund has been set up. Use the sidebar to start one.")
+        return
+
+    fund_info_table(st.session_state.fund)
     
     # Render the main content.
     # Bills section (unified table with display and deletion,
@@ -377,7 +375,6 @@ def main():
     
     # Schedule visualization section (chart showing account balance,
     # contributions, and payouts over time).
-    st.divider()
     st.header("Schedule Visualization")
     render_schedule_visualization()
 
