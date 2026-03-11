@@ -48,7 +48,7 @@ from sinkingfund_ui.components.tables import (
 )
 
 from sinkingfund_ui.utils.report_utils import convert_report_section_to_dataframe
-from sinkingfund_ui.components.figures import create_timeseries_chart_from_dfs
+from sinkingfund_ui.components.figures import create_timeseries_chart_from_dfs, create_cashflow_chart_from_dfs
 
 ########################################################################
 ## PAGE CONFIGURATION
@@ -291,6 +291,12 @@ def render_schedule_visualization():
         
         # Display the chart.
         st.plotly_chart(fig, use_container_width=True)
+
+        # Create and display the cashflow bar chart.
+        cashflow_fig = create_cashflow_chart_from_dfs(
+            contributions_df, payouts_df
+        )
+        st.plotly_chart(cashflow_fig, use_container_width=True)
     
     except Exception as e:
         st.error(f"Error displaying schedule visualization: {str(e)}")

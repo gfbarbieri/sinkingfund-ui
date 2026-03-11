@@ -20,7 +20,7 @@ import pytest
 import pandas as pd
 from datetime import date, timedelta
 
-from sinkingfund_ui.components.figures import create_timeseries_chart_from_dfs
+from sinkingfund_ui.components.figures import create_timeseries_chart_from_dfs, create_cashflow_chart_from_dfs
 
 
 class TestTimeSeriesChart:
@@ -258,24 +258,253 @@ class TestTimeSeriesChart:
         balance_df = pd.DataFrame({
             'total': [1000.0, 1100.0, 1200.0]
         }, index=dates)
-        
+
         contrib_df = pd.DataFrame({
             'total': [100.0, 100.0, 100.0],
             'count': [1, 1, 1],
             'bill_1': [100.0, 100.0, 100.0]
         }, index=dates)
-        
+
         payouts_df = pd.DataFrame({
             'total': [0.0, 0.0, 0.0],
             'count': [0, 0, 0]
         }, index=dates)
-        
+
         # Create chart.
         fig = create_timeseries_chart_from_dfs(
             balance_df, contrib_df, payouts_df
         )
-        
+
         # Should have balance and contribution traces.
         assert fig is not None
         assert len(fig.data) >= 2
         # Payout trace may or may not be added (only if payouts < 0).
+
+    def test_same_day_contribution_and_payout_single_marker(self):
+        """Test that same-day contribution and payout land in 'Both' trace."""
+        # Both days have contributions AND payouts → both land in "Both".
+        dates = [date.today(), date.today() + timedelta(days=1)]
+        balance_df = pd.DataFrame({
+            'total': [1000.0, 950.0]
+        }, index=dates)
+
+        contrib_df = pd.DataFrame({
+            'total': [200.0, 30.0],
+            'count': [1, 1],
+            'bill_1': [200.0, 30.0]
+        }, index=dates)
+
+        payouts_df = pd.DataFrame({
+            'total': [-50.0, -100.0],
+            'count': [1, 1],
+            'bill_2': [-50.0, -100.0]
+        }, index=dates)
+
+        fig = create_timeseries_chart_from_dfs(
+            balance_df, contrib_df, payouts_df
+        )
+
+        both_trace = None
+        for trace in fig.data:
+            if trace.name == 'Both':
+                both_trace = trace
+
+        assert both_trace is not None
+        assert dates[0] in list(both_trace.x)
+        assert dates[1] in list(both_trace.x)
+
+        # Each date appears in exactly one trace (the "Both" trace).
+        all_marker_dates = list(both_trace.x)
+        assert len(all_marker_dates) == 2
+        assert len(set(all_marker_dates)) == 2
+
+    def test_same_day_hover_shows_both_breakdowns(self):
+        """Test hover text includes both contribution and payout details."""
+        dates = [date.today()]
+        balance_df = pd.DataFrame({
+            'total': [1000.0]
+        }, index=dates)
+
+        contrib_df = pd.DataFrame({
+            'total': [200.0],
+            'count': [1],
+            'bill_1': [200.0]
+        }, index=dates)
+
+        payouts_df = pd.DataFrame({
+            'total': [-50.0],
+            'count': [1],
+            'bill_2': [-50.0]
+        }, index=dates)
+
+        fig = create_timeseries_chart_from_dfs(
+            balance_df, contrib_df, payouts_df
+        )
+
+        # Both present → "Both" trace.
+        both_trace = None
+        for trace in fig.data:
+            if trace.name == 'Both':
+                both_trace = trace
+                break
+
+        assert both_trace is not None
+        hover = both_trace.text[0]
+        # Both sections should appear.
+        assert 'Contributions: $200.00' in hover
+        assert 'Payouts: $50.00' in hover
+
+    def test_net_zero_shows_both_marker(self):
+        """Test that net-zero dates get a purple 'Both' marker."""
+        dates = [date.today()]
+        balance_df = pd.DataFrame({
+            'total': [1000.0]
+        }, index=dates)
+
+        contrib_df = pd.DataFrame({
+            'total': [100.0],
+            'count': [1],
+            'bill_1': [100.0]
+        }, index=dates)
+
+        payouts_df = pd.DataFrame({
+            'total': [-100.0],
+            'count': [1],
+            'bill_2': [-100.0]
+        }, index=dates)
+
+        fig = create_timeseries_chart_from_dfs(
+            balance_df, contrib_df, payouts_df
+        )
+
+        # Net zero: both present → "Both" trace (purple circle).
+        both_trace = None
+        for trace in fig.data:
+            if trace.name == 'Both':
+                both_trace = trace
+
+        assert both_trace is not None
+        assert dates[0] in list(both_trace.x)
+        assert both_trace.marker.symbol == 'circle'
+        assert both_trace.marker.color == 'purple'
+
+
+class TestCashflowChart:
+    """Test cashflow line chart creation."""
+
+    def test_create_cashflow_chart_structure(self):
+        """Test that chart has 2 traces named Contributions and Payouts, both Scatter type."""
+        dates = [date.today() + timedelta(days=i) for i in range(3)]
+        contrib_df = pd.DataFrame({
+            'total': [100.0, 0.0, 150.0],
+            'bill_1': [100.0, 0.0, 150.0],
+        }, index=dates)
+        payouts_df = pd.DataFrame({
+            'total': [0.0, -50.0, 0.0],
+            'bill_2': [0.0, -50.0, 0.0],
+        }, index=dates)
+
+        fig = create_cashflow_chart_from_dfs(contrib_df, payouts_df)
+
+        assert fig is not None
+        assert len(fig.data) == 2
+        trace_names = [t.name for t in fig.data]
+        assert 'Contributions' in trace_names
+        assert 'Payouts' in trace_names
+        for trace in fig.data:
+            assert trace.type == 'scatter'
+            assert trace.mode == 'lines+markers'
+
+    def test_cashflow_chart_contribution_values(self):
+        """Test contributions appear as positive bars with correct y-values."""
+        dates = [date.today(), date.today() + timedelta(days=1)]
+        contrib_df = pd.DataFrame({
+            'total': [100.0, 200.0],
+            'bill_1': [100.0, 200.0],
+        }, index=dates)
+        payouts_df = pd.DataFrame({
+            'total': [0.0, 0.0],
+        }, index=dates)
+
+        fig = create_cashflow_chart_from_dfs(contrib_df, payouts_df)
+
+        contrib_trace = None
+        for trace in fig.data:
+            if trace.name == 'Contributions':
+                contrib_trace = trace
+                break
+
+        assert contrib_trace is not None
+        assert list(contrib_trace.y) == [100.0, 200.0]
+        assert all(v > 0 for v in contrib_trace.y)
+
+    def test_cashflow_chart_payout_values(self):
+        """Test payouts appear as negative bars with correct y-values."""
+        dates = [date.today(), date.today() + timedelta(days=1)]
+        contrib_df = pd.DataFrame({
+            'total': [0.0, 0.0],
+        }, index=dates)
+        payouts_df = pd.DataFrame({
+            'total': [-75.0, -125.0],
+            'bill_1': [-75.0, -125.0],
+        }, index=dates)
+
+        fig = create_cashflow_chart_from_dfs(contrib_df, payouts_df)
+
+        payout_trace = None
+        for trace in fig.data:
+            if trace.name == 'Payouts':
+                payout_trace = trace
+                break
+
+        assert payout_trace is not None
+        assert list(payout_trace.y) == [-75.0, -125.0]
+        assert all(v < 0 for v in payout_trace.y)
+
+    def test_cashflow_chart_empty_dataframes(self):
+        """Test handles empty DataFrames gracefully."""
+        contrib_df = pd.DataFrame(columns=['total'])
+        payouts_df = pd.DataFrame(columns=['total'])
+
+        fig = create_cashflow_chart_from_dfs(contrib_df, payouts_df)
+
+        assert fig is not None
+        assert len(fig.data) == 0
+
+    def test_cashflow_chart_hover_text(self):
+        """Test hover text includes per-bill breakdown."""
+        dates = [date.today()]
+        contrib_df = pd.DataFrame({
+            'total': [150.0],
+            'bill_1': [100.0],
+            'bill_2': [50.0],
+        }, index=dates)
+        payouts_df = pd.DataFrame({
+            'total': [-80.0],
+            'bill_3': [-80.0],
+        }, index=dates)
+
+        fig = create_cashflow_chart_from_dfs(contrib_df, payouts_df)
+
+        contrib_trace = None
+        payout_trace = None
+        for trace in fig.data:
+            if trace.name == 'Contributions':
+                contrib_trace = trace
+            elif trace.name == 'Payouts':
+                payout_trace = trace
+
+        # Contribution hover text.
+        assert contrib_trace is not None
+        hover = contrib_trace.text[0]
+        assert 'Contributions: $150.00' in hover
+        assert 'Bills:' in hover
+        assert '$100.00' in hover
+        assert '$50.00' in hover
+
+        # Payout hover text.
+        assert payout_trace is not None
+        hover = payout_trace.text[0]
+        assert 'Payouts: $80.00' in hover
+        assert 'Bills:' in hover
+        assert '$80.00' in hover
